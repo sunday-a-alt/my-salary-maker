@@ -125,7 +125,7 @@ const Index = () => {
         {/* Preview */}
         <div className="flex-1 overflow-auto bg-background rounded-lg border border-border p-4">
           <div className="overflow-auto">
-            <PayslipPreview ref={previewRef} data={data} />
+            <PayslipPreview ref={previewRef} data={dataWithWords} />
           </div>
         </div>
       </div>
