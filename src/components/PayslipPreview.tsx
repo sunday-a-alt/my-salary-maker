@@ -2,78 +2,82 @@ import { forwardRef, useMemo } from "react";
 import type { PayslipData } from "@/types/payslip";
 import taskusLogo from "@/assets/taskus-logo.png";
 
-const fmt = (v: string) => {
-  const n = parseFloat(v);
-  if (isNaN(n)) return v || "0.00";
+const fmt = (v: string | number) => {
+  const n = typeof v === "number" ? v : parseFloat(v);
+  if (isNaN(n)) return typeof v === "string" ? (v || "0.00") : "0.00";
   return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const sum = (...vals: string[]) => vals.reduce((a, v) => a + (parseFloat(v) || 0), 0);
+const num = (v: string) => parseFloat(v) || 0;
 
 interface Props { data: PayslipData }
 
 const PayslipPreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
-  const grossEarningsMaster = useMemo(() => sum(
-    data.basicPayMaster, data.hraMaster, data.bonusMaster, data.otherAllowancesMaster
-  ), [data.basicPayMaster, data.hraMaster, data.bonusMaster, data.otherAllowancesMaster]);
+  const grossEarningsMaster = useMemo(() =>
+    num(data.basicPayMaster) + num(data.hraMaster) + num(data.bonusMaster) + num(data.otherAllowancesMaster),
+    [data.basicPayMaster, data.hraMaster, data.bonusMaster, data.otherAllowancesMaster]
+  );
 
-  const grossEarnings = useMemo(() => sum(
-    data.basicPay, data.hra, data.bonus, data.otherAllowances,
-    data.nationalHolidayPay, data.publicHolidayPay, data.referralBonus, data.undertimeDeduct
-  ), [data.basicPay, data.hra, data.bonus, data.otherAllowances,
-    data.nationalHolidayPay, data.publicHolidayPay, data.referralBonus, data.undertimeDeduct]);
+  const grossEarnings = useMemo(() =>
+    num(data.basicPay) + num(data.hra) + num(data.bonus) + num(data.otherAllowances) +
+    num(data.nationalHolidayPay) + num(data.publicHolidayPay) + num(data.referralBonus) + num(data.undertimeDeduct),
+    [data.basicPay, data.hra, data.bonus, data.otherAllowances,
+     data.nationalHolidayPay, data.publicHolidayPay, data.referralBonus, data.undertimeDeduct]
+  );
 
-  const grossEarningsYtd = useMemo(() => sum(
-    data.basicPayYtd, data.hraYtd, data.bonusYtd, data.otherAllowancesYtd,
-    data.nationalHolidayPayYtd, data.publicHolidayPayYtd, data.referralBonusYtd, data.undertimeDeductYtd
-  ), [data.basicPayYtd, data.hraYtd, data.bonusYtd, data.otherAllowancesYtd,
-    data.nationalHolidayPayYtd, data.publicHolidayPayYtd, data.referralBonusYtd, data.undertimeDeductYtd]);
+  const grossEarningsYtd = useMemo(() =>
+    num(data.basicPayYtd) + num(data.hraYtd) + num(data.bonusYtd) + num(data.otherAllowancesYtd) +
+    num(data.nationalHolidayPayYtd) + num(data.publicHolidayPayYtd) + num(data.referralBonusYtd) + num(data.undertimeDeductYtd),
+    [data.basicPayYtd, data.hraYtd, data.bonusYtd, data.otherAllowancesYtd,
+     data.nationalHolidayPayYtd, data.publicHolidayPayYtd, data.referralBonusYtd, data.undertimeDeductYtd]
+  );
 
-  const grossDeduction = useMemo(() => sum(
-    data.providentFund, data.labourWelfareFund, data.professionalTax
-  ), [data.providentFund, data.labourWelfareFund, data.professionalTax]);
+  const grossDeduction = useMemo(() =>
+    num(data.providentFund) + num(data.labourWelfareFund) + num(data.professionalTax),
+    [data.providentFund, data.labourWelfareFund, data.professionalTax]
+  );
 
-  const grossDeductionYtd = useMemo(() => sum(
-    data.providentFundYtd, data.labourWelfareFundYtd, data.professionalTaxYtd
-  ), [data.providentFundYtd, data.labourWelfareFundYtd, data.professionalTaxYtd]);
+  const grossDeductionYtd = useMemo(() =>
+    num(data.providentFundYtd) + num(data.labourWelfareFundYtd) + num(data.professionalTaxYtd),
+    [data.providentFundYtd, data.labourWelfareFundYtd, data.professionalTaxYtd]
+  );
 
   const netTransfer = grossEarnings - grossDeduction;
 
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const monthName = months[parseInt(data.month) - 1] || data.month;
 
-  // Column widths matching docx proportions (total ~7796095 units → 754px usable)
-  // Col0: 22.1%, Col1+2: 28.0% (merged value), Col3: 6.9% (spacer), Col4: 20.9%, Col5+6: 22.1% (merged value)
-  const S: React.CSSProperties = { borderCollapse: "collapse", width: "100%" };
-  const td = (extra?: React.CSSProperties): React.CSSProperties => ({
+  // Base cell style matching docx
+  const base: React.CSSProperties = {
     border: "1px solid black",
-    padding: "2px 4px",
-    fontSize: "9.5px",
+    padding: "1px 4px",
+    fontSize: "9px",
     fontFamily: "Arial, sans-serif",
     verticalAlign: "middle",
-    ...extra,
-  });
-  const tdBold = (extra?: React.CSSProperties): React.CSSProperties => td({ fontWeight: "bold", ...extra });
-  const tdRight = (extra?: React.CSSProperties): React.CSSProperties => td({ textAlign: "right", ...extra });
-  const tdBoldRight = (extra?: React.CSSProperties): React.CSSProperties => td({ fontWeight: "bold", textAlign: "right", ...extra });
+    lineHeight: "1.4",
+  };
+  const bold: React.CSSProperties = { ...base, fontWeight: "bold" };
+  const right: React.CSSProperties = { ...base, textAlign: "right" };
+  const boldRight: React.CSSProperties = { ...base, fontWeight: "bold", textAlign: "right" };
 
+  // Employee detail rows: [leftLabel, leftValue, rightLabel, rightValue]
   const empRows: [string, string, string, string][] = [
-    ["EMPCODE",                      data.empCode,                   "UAN NO",                    data.uanNo],
-    ["EMPNAME",                      data.empName,                   "PF NO",                     data.pfNo],
-    ["DESIGNATION",                  data.designation,               "ESI NO",                    data.esiNo],
-    ["DOJ",                          data.doj,                       "STD DAYS",                  data.stdDays],
-    ["PAN",                          data.pan,                       "WRKDAYS",                   data.wrkDays],
-    ["DEPARTMENT",                   data.department,                "LOP DAYS",                  data.lopDays],
-    ["LOCATION",                     data.location,                  "BANK NAME",                 data.bankName],
-    ["PREVIOUS LOP DAYS",            data.previousLopDays,           "ACCOUNT NO",                data.accountNo],
-    ["ND HOURS",                     data.ndHours,                   "LOP REVERSAL DAYS",         data.lopReversalDays],
-    ["UT HOURS",                     data.utHours,                   "OT HOURS",                  data.otHours],
-    ["NATIONAL HOLIDAY PAY HOURS",   data.nationalHolidayPayHours,   "SUPPLIMENTARY PAY HOURS",   data.supplimentaryPayHours],
-    ["PUBLIC HOLIDAY PAY HOURS",     data.publicHolidayPayHours,     "NEW JOINER ARREAR DAYS",    data.newJoinerArrearDays],
-    ["PL ENCASHMENT DAYS",           data.plEncashmentDays,          "PREV OVERTIME PAY HOURS",   data.prevOvertimePayHours],
-    ["PREV SUPPLIMENTARY PAY HOURS", data.prevSupplimentaryPayHours, "PREV UT AND TARDINESS DEDN",data.prevUtAndTardinessDedn],
-    ["PREV PUBLIC HOLIDAY PAY HOURS",data.prevPublicHolidayPayHours, "PREV UT AND TARDINESS REV HR", data.prevUtAndTardinessRevHr],
-    ["PREV NATIONAL HOLIDAY PAY HOUR",data.prevNationalHolidayPayHour,"MANAGEMENT LEVEL",         data.managementLevel],
+    ["EMPCODE",                       data.empCode,                    "UAN NO",                     data.uanNo],
+    ["EMPNAME",                       data.empName,                    "PF NO",                      data.pfNo],
+    ["DESIGNATION",                   data.designation,                "ESI NO",                     data.esiNo],
+    ["DOJ",                           data.doj,                        "STD DAYS",                   data.stdDays],
+    ["PAN",                           data.pan,                        "WRKDAYS",                    data.wrkDays],
+    ["DEPARTMENT",                    data.department,                 "LOP DAYS",                   data.lopDays],
+    ["LOCATION",                      data.location,                   "BANK NAME",                  data.bankName],
+    ["PREVIOUS LOP DAYS",             data.previousLopDays,            "ACCOUNT NO",                 data.accountNo],
+    ["ND HOURS",                      data.ndHours,                    "LOP REVERSAL DAYS",          data.lopReversalDays],
+    ["UT HOURS",                      data.utHours,                    "OT HOURS",                   data.otHours],
+    ["NATIONAL HOLIDAY PAY HOURS",    data.nationalHolidayPayHours,    "SUPPLIMENTARY PAY HOURS",    data.supplimentaryPayHours],
+    ["PUBLIC HOLIDAY PAY HOURS",      data.publicHolidayPayHours,      "NEW JOINER ARREAR DAYS",     data.newJoinerArrearDays],
+    ["PL ENCASHMENT DAYS",            data.plEncashmentDays,           "PREV OVERTIME PAY HOURS",    data.prevOvertimePayHours],
+    ["PREV SUPPLIMENTARY PAY HOURS",  data.prevSupplimentaryPayHours,  "PREV UT AND TARDINESS DEDN", data.prevUtAndTardinessDedn],
+    ["PREV PUBLIC HOLIDAY PAY HOURS", data.prevPublicHolidayPayHours,  "PREV UT AND TARDINESS REV HR", data.prevUtAndTardinessRevHr],
+    ["PREV NATIONAL HOLIDAY PAY HOUR",data.prevNationalHolidayPayHour, "MANAGEMENT LEVEL",           data.managementLevel],
   ];
 
   return (
@@ -84,202 +88,253 @@ const PayslipPreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
         backgroundColor: "white",
         color: "black",
         fontFamily: "Arial, sans-serif",
-        padding: "16px 18px",
+        padding: "12px 14px",
         boxSizing: "border-box",
       }}
     >
-      {/* ── Single outer table matching docx structure ── */}
-      <table style={{ ...S, marginBottom: "0" }}>
+      {/*
+        ── EXACT DOCX TABLE STRUCTURE ──
+        7 grid columns with these widths (EMU → %):
+          col0: 1722120 → 22.12%
+          col1: 1089660 → 14.00%  ← col1+col2 merged in most rows = 28.00%
+          col2: 1089660 → 14.00%
+          col3:  537845 →  6.91%  ← spacer / YTD in earnings
+          col4: 1630680 → 20.95%
+          col5: 1266825 → 16.27%
+          col6:  459105 →  5.90%  ← last col (empty in emp rows)
+        Total: 7796095
+      */}
+      <table
+        style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          tableLayout: "fixed",
+        }}
+      >
         <colgroup>
-          {/* Col0: label-left 22.1% */}
-          <col style={{ width: "22.1%" }} />
-          {/* Col1: value-left part1 14% */}
-          <col style={{ width: "14%" }} />
-          {/* Col2: value-left part2 14% */}
-          <col style={{ width: "14%" }} />
-          {/* Col3: spacer 6.9% */}
-          <col style={{ width: "6.9%" }} />
-          {/* Col4: label-right 20.9% */}
-          <col style={{ width: "20.9%" }} />
-          {/* Col5: value-right part1 13.1% */}
-          <col style={{ width: "13.1%" }} />
-          {/* Col6: value-right part2 9% */}
-          <col style={{ width: "9%" }} />
+          <col style={{ width: "22.12%" }} />
+          <col style={{ width: "14.00%" }} />
+          <col style={{ width: "14.00%" }} />
+          <col style={{ width: "6.91%" }} />
+          <col style={{ width: "20.95%" }} />
+          <col style={{ width: "16.27%" }} />
+          <col style={{ width: "5.90%" }} />
         </colgroup>
         <tbody>
 
-          {/* ── HEADER ROW: merged all 7 cols ── */}
+          {/* ── ROW 0: Header span=7 ── */}
           <tr>
-            <td colSpan={7} style={td({ padding: "6px 8px", border: "1px solid black" })}>
+            <td colSpan={7} style={{ ...base, padding: "5px 8px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: "bold", fontSize: "12px", lineHeight: "1.4" }}>
+                  <div style={{ fontWeight: "bold", fontSize: "11px", lineHeight: "1.5" }}>
                     TaskUS India Private Limited
                   </div>
-                  <div style={{ fontSize: "8.5px", lineHeight: "1.5", marginTop: "1px" }}>
-                    Reg.Office: 18th &amp; 19th floor, Tower-9, Gigaplex IT Park, MIDC, Plot No 1 I.T.5, Airoli Knowledge Park Road,
-                    TTC Industrial Area, Airoli, Navi Mumbai, Maharashtra – 400708, India
+                  <div style={{ fontSize: "8px", lineHeight: "1.5" }}>
+                    Reg.Office:18th &amp; 19th floor, Tower-9, Gigaplex IT Park, MIDC, Plot No 1 I.T.5,
+                    Airoli Knowledge Park Road, TTC Industrial Area, Airoli, Navi Mumbai, Maharashtra – 400708, India
                   </div>
-                  <div style={{ fontWeight: "bold", fontSize: "11px", marginTop: "5px" }}>
+                  <div style={{ fontWeight: "bold", fontSize: "10px", marginTop: "3px" }}>
                     Pay Slip for the Month of {monthName} {data.year}
                   </div>
                 </div>
                 <img
                   src={taskusLogo}
                   alt="TaskUs"
-                  style={{ height: "40px", marginLeft: "16px", marginTop: "2px", flexShrink: 0 }}
+                  style={{ height: "38px", marginLeft: "12px", flexShrink: 0 }}
                 />
               </div>
             </td>
           </tr>
 
-          {/* ── EMPLOYEE DETAIL ROWS ── */}
+          {/* ── ROWS 1-16: Employee details ──
+               Actual cells: [span=1 label][span=2 value][span=1 empty][span=1 label][span=1 value][span=1 empty]
+               = 6 actual cells covering 7 grid columns
+          */}
           {empRows.map(([lbl1, val1, lbl2, val2], i) => (
             <tr key={i}>
-              {/* Label left */}
-              <td style={tdBold({ whiteSpace: "nowrap" })}>{lbl1}</td>
-              {/* Value left: spans col1+col2 */}
-              <td colSpan={2} style={td()}>{val1}</td>
-              {/* Spacer col3 */}
-              <td style={td({ borderLeft: "none", borderRight: "none" })}></td>
-              {/* Label right */}
-              <td style={tdBold({ whiteSpace: "nowrap" })}>{lbl2}</td>
-              {/* Value right: spans col5+col6 */}
-              <td colSpan={2} style={td()}>{val2}</td>
+              <td style={bold}>{lbl1}</td>
+              <td colSpan={2} style={base}>{val1}</td>
+              <td style={{ ...base, borderLeft: "1px solid black", borderRight: "1px solid black" }}></td>
+              <td style={bold}>{lbl2}</td>
+              <td style={base}>{val2}</td>
+              <td style={base}></td>
             </tr>
           ))}
 
-          {/* ── EARNINGS & DEDUCTIONS HEADER ── */}
+          {/* ── ROW 17: Earnings/Deductions header ──
+               Actual: [EARNINGS][span=2 "\tMASTER\tAMOUNT"][YTD][DEDUCTIONS][AMOUNT][YTD]
+               The merged cell has tab-separated MASTER and AMOUNT — rendered as two sub-columns
+          */}
           <tr>
-            <td style={tdBold()}>EARNINGS</td>
-            <td style={tdBoldRight()}>MASTER</td>
-            <td style={tdBoldRight()}>AMOUNT</td>
-            <td style={tdBoldRight()}>YTD</td>
-            <td style={tdBold()}>DEDUCTIONS</td>
-            <td style={tdBoldRight()}>AMOUNT</td>
-            <td style={tdBoldRight()}>YTD</td>
-          </tr>
-
-          {/* ── Row 1: Basic Pay / Provident Fund ── */}
-          <tr>
-            <td style={td()}>BASIC PAY</td>
-            <td style={tdRight()}>{fmt(data.basicPayMaster)}</td>
-            <td style={tdRight()}>{fmt(data.basicPay)}</td>
-            <td style={tdRight()}>{fmt(data.basicPayYtd)}</td>
-            <td style={td()}>PROVIDENT FUND</td>
-            <td style={tdRight()}>{fmt(data.providentFund)}</td>
-            <td style={tdRight()}>{fmt(data.providentFundYtd)}</td>
-          </tr>
-
-          {/* ── Row 2: HRA / Labour Welfare Fund ── */}
-          <tr>
-            <td style={td()}>HOUSE RENT ALLOWANCE</td>
-            <td style={tdRight()}>{fmt(data.hraMaster)}</td>
-            <td style={tdRight()}>{fmt(data.hra)}</td>
-            <td style={tdRight()}>{fmt(data.hraYtd)}</td>
-            <td style={td()}>LABOUR WELFARE FUND</td>
-            <td style={tdRight()}>{fmt(data.labourWelfareFund)}</td>
-            <td style={tdRight()}>{fmt(data.labourWelfareFundYtd)}</td>
-          </tr>
-
-          {/* ── Row 3: Bonus / Professional Tax ── */}
-          <tr>
-            <td style={td()}>BONUS</td>
-            <td style={tdRight()}>{fmt(data.bonusMaster)}</td>
-            <td style={tdRight()}>{fmt(data.bonus)}</td>
-            <td style={tdRight()}>{fmt(data.bonusYtd)}</td>
-            <td style={td()}>PROFESSIONAL TAX</td>
-            <td style={tdRight()}>{fmt(data.professionalTax)}</td>
-            <td style={tdRight()}>{fmt(data.professionalTaxYtd)}</td>
-          </tr>
-
-          {/* ── Row 4: Other Allowances ── */}
-          <tr>
-            <td style={td()}>OTHER ALLOWANCES</td>
-            <td style={tdRight()}>{fmt(data.otherAllowancesMaster)}</td>
-            <td style={tdRight()}>{fmt(data.otherAllowances)}</td>
-            <td style={tdRight()}>{fmt(data.otherAllowancesYtd)}</td>
-            <td style={td()}></td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}></td>
-          </tr>
-
-          {/* ── Row 5: National Holiday Pay ── */}
-          <tr>
-            <td style={td()}>NATIONAL HOLIDAY PAY</td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}>{fmt(data.nationalHolidayPay)}</td>
-            <td style={tdRight()}>{fmt(data.nationalHolidayPayYtd)}</td>
-            <td style={td()}></td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}></td>
-          </tr>
-
-          {/* ── Row 6: Public Holiday Pay ── */}
-          <tr>
-            <td style={td()}>PUBLIC HOLIDAY PAY</td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}>{fmt(data.publicHolidayPay)}</td>
-            <td style={tdRight()}>{fmt(data.publicHolidayPayYtd)}</td>
-            <td style={td()}></td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}></td>
-          </tr>
-
-          {/* ── Row 7: Referral Bonus ── */}
-          <tr>
-            <td style={td()}>REFERRAL BONUS</td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}>{fmt(data.referralBonus)}</td>
-            <td style={tdRight()}>{fmt(data.referralBonusYtd)}</td>
-            <td style={td()}></td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}></td>
-          </tr>
-
-          {/* ── Row 8: Undertime and Tardiness Deduct ── */}
-          <tr>
-            <td style={td()}>UNDERTIME AND TARDINESS DEDUCT</td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}>{fmt(data.undertimeDeduct)}</td>
-            <td style={tdRight()}>{fmt(data.undertimeDeductYtd)}</td>
-            <td style={td()}></td>
-            <td style={tdRight()}></td>
-            <td style={tdRight()}></td>
-          </tr>
-
-          {/* ── GROSS ROW ── */}
-          {/* Matches docx: "GROSS EARNINGS  28,200.00" spans col0+col1, then AMOUNT in col2, YTD in col3 */}
-          <tr>
-            <td style={tdBold()}>GROSS EARNINGS</td>
-            <td style={tdBoldRight()}>{fmt(String(grossEarningsMaster))}</td>
-            <td style={tdBoldRight()}>{fmt(String(grossEarnings))}</td>
-            <td style={tdBoldRight()}>{fmt(String(grossEarningsYtd))}</td>
-            <td style={tdBold()}>GROSS DEDUCTION</td>
-            <td style={tdBoldRight()}>{fmt(String(grossDeduction))}</td>
-            <td style={tdBoldRight()}>{fmt(String(grossDeductionYtd))}</td>
-          </tr>
-
-          {/* ── NET TRANSFER ROW ── */}
-          <tr>
-            <td colSpan={7} style={td({ padding: "3px 6px" })}>
-              <span style={{ fontWeight: "bold", fontSize: "10px" }}>NET TRANSFER</span>
-              <span style={{ fontSize: "10px" }}>&nbsp;&nbsp;: {fmt(String(netTransfer))}</span>
+            <td style={bold}>EARNINGS</td>
+            {/* span=2 cell with MASTER left-aligned and AMOUNT right-aligned via flex */}
+            <td colSpan={2} style={{ ...bold, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>MASTER</span>
+                <span>AMOUNT</span>
+              </div>
             </td>
+            <td style={boldRight}>YTD</td>
+            <td style={bold}>DEDUCTIONS</td>
+            <td style={boldRight}>AMOUNT</td>
+            <td style={boldRight}>YTD</td>
           </tr>
 
-          {/* ── IN WORDS ROW ── */}
+          {/* ── ROWS 18-21: Earnings with MASTER + AMOUNT in span=2 cell ──
+               Actual: [label][span=2 "MASTER  AMOUNT"][YTD][deduction][amount][ytd]
+          */}
+          {/* Row 18: BASIC PAY / PROVIDENT FUND */}
           <tr>
-            <td colSpan={7} style={td({ padding: "3px 6px" })}>
-              <span style={{ fontWeight: "bold", fontSize: "10px" }}>IN WORDS</span>
-              <span style={{ fontSize: "10px" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {data.amountInWords}</span>
+            <td style={base}>BASIC PAY</td>
+            <td colSpan={2} style={{ ...base, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>{fmt(data.basicPayMaster)}</span>
+                <span>{fmt(data.basicPay)}</span>
+              </div>
+            </td>
+            <td style={right}>{fmt(data.basicPayYtd)}</td>
+            <td style={base}>PROVIDENT FUND</td>
+            <td style={right}>{fmt(data.providentFund)}</td>
+            <td style={right}>{fmt(data.providentFundYtd)}</td>
+          </tr>
+
+          {/* Row 19: HOUSE RENT ALLOWANCE / LABOUR WELFARE FUND */}
+          <tr>
+            <td style={base}>HOUSE RENT ALLOWANCE</td>
+            <td colSpan={2} style={{ ...base, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>{fmt(data.hraMaster)}</span>
+                <span>{fmt(data.hra)}</span>
+              </div>
+            </td>
+            <td style={right}>{fmt(data.hraYtd)}</td>
+            <td style={base}>LABOUR WELFARE FUND</td>
+            <td style={right}>{fmt(data.labourWelfareFund)}</td>
+            <td style={right}>{fmt(data.labourWelfareFundYtd)}</td>
+          </tr>
+
+          {/* Row 20: BONUS / PROFESSIONAL TAX */}
+          <tr>
+            <td style={base}>BONUS</td>
+            <td colSpan={2} style={{ ...base, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>{fmt(data.bonusMaster)}</span>
+                <span>{fmt(data.bonus)}</span>
+              </div>
+            </td>
+            <td style={right}>{fmt(data.bonusYtd)}</td>
+            <td style={base}>PROFESSIONAL TAX</td>
+            <td style={right}>{fmt(data.professionalTax)}</td>
+            <td style={right}>{fmt(data.professionalTaxYtd)}</td>
+          </tr>
+
+          {/* Row 21: OTHER ALLOWANCES / empty deduction */}
+          <tr>
+            <td style={base}>OTHER ALLOWANCES</td>
+            <td colSpan={2} style={{ ...base, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>{fmt(data.otherAllowancesMaster)}</span>
+                <span>{fmt(data.otherAllowances)}</span>
+              </div>
+            </td>
+            <td style={right}>{fmt(data.otherAllowancesYtd)}</td>
+            <td style={base}></td>
+            <td style={base}></td>
+            <td style={base}></td>
+          </tr>
+
+          {/* ── ROWS 22-25: Single value in span=2 cell (no MASTER) ── */}
+          {/* Row 22: NATIONAL HOLIDAY PAY */}
+          <tr>
+            <td style={base}>NATIONAL HOLIDAY PAY</td>
+            <td colSpan={2} style={right}>{fmt(data.nationalHolidayPay)}</td>
+            <td style={right}>{fmt(data.nationalHolidayPayYtd)}</td>
+            <td style={base}></td>
+            <td style={base}></td>
+            <td style={base}></td>
+          </tr>
+
+          {/* Row 23: PUBLIC HOLIDAY PAY */}
+          <tr>
+            <td style={base}>PUBLIC HOLIDAY PAY</td>
+            <td colSpan={2} style={right}>{fmt(data.publicHolidayPay)}</td>
+            <td style={right}>{fmt(data.publicHolidayPayYtd)}</td>
+            <td style={base}></td>
+            <td style={base}></td>
+            <td style={base}></td>
+          </tr>
+
+          {/* Row 24: REFERRAL BONUS */}
+          <tr>
+            <td style={base}>REFERRAL BONUS</td>
+            <td colSpan={2} style={right}>{fmt(data.referralBonus)}</td>
+            <td style={right}>{fmt(data.referralBonusYtd)}</td>
+            <td style={base}></td>
+            <td style={base}></td>
+            <td style={base}></td>
+          </tr>
+
+          {/* Row 25: UNDERTIME AND TARDINESS DEDUCT */}
+          <tr>
+            <td style={base}>UNDERTIME AND TARDINESS DEDUCT</td>
+            <td colSpan={2} style={right}>{fmt(data.undertimeDeduct)}</td>
+            <td style={right}>{fmt(data.undertimeDeductYtd)}</td>
+            <td style={base}></td>
+            <td style={base}></td>
+            <td style={base}></td>
+          </tr>
+
+          {/* ── ROW 26: GROSS ──
+               Actual: [span=2 "\tGROSS EARNINGS\t28,200.00"][32,926.00][189,424.00][GROSS DEDUCTION][1,965.00][13,494.00]
+               span=2 covers col0+col1, then col2=AMOUNT, col3=YTD
+          */}
+          <tr>
+            <td colSpan={2} style={{ ...bold, padding: "1px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
+                <span>GROSS EARNINGS</span>
+                <span>{fmt(grossEarningsMaster)}</span>
+              </div>
+            </td>
+            <td style={boldRight}>{fmt(grossEarnings)}</td>
+            <td style={boldRight}>{fmt(grossEarningsYtd)}</td>
+            <td style={bold}>GROSS DEDUCTION</td>
+            <td style={boldRight}>{fmt(grossDeduction)}</td>
+            <td style={boldRight}>{fmt(grossDeductionYtd)}</td>
+          </tr>
+
+          {/* ── ROW 27: NET TRANSFER span=7 ──
+               "NET TRANSFER : 30,961.00\tIN WORDS\t: Rupees Thirty..."
+               Both NET TRANSFER and IN WORDS on same row, tab-separated in docx
+          */}
+          <tr>
+            <td colSpan={7} style={{ ...base, padding: "2px 6px" }}>
+              <div style={{ display: "flex", gap: "40px" }}>
+                <span>
+                  <strong>NET TRANSFER</strong>
+                  {" : "}
+                  {fmt(netTransfer)}
+                </span>
+                <span>
+                  <strong>IN WORDS</strong>
+                  {"\t: "}
+                  {data.amountInWords}
+                </span>
+              </div>
             </td>
           </tr>
 
         </tbody>
       </table>
 
-      <p style={{ fontSize: "8.5px", marginTop: "8px", fontStyle: "italic", textAlign: "center", margin: "8px 0 0 0" }}>
+      <p style={{
+        fontSize: "8px",
+        marginTop: "6px",
+        fontStyle: "italic",
+        textAlign: "center",
+        fontFamily: "Arial, sans-serif",
+        color: "black",
+      }}>
         This is a computer generated document, hence no signature is required.
       </p>
     </div>
