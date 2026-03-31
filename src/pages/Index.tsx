@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import PayslipForm from "@/components/PayslipForm";
 import PayslipPreview from "@/components/PayslipPreview";
