@@ -75,17 +75,21 @@ const Index = () => {
   const previewRef = useRef<HTMLDivElement>(null);
 
   // Auto-calculate amount in words
-  useEffect(() => {
+  const netAmount = useMemo(() => {
     const grossEarnings = [data.basicPay, data.hra, data.bonus, data.otherAllowances,
       data.nationalHolidayPay, data.publicHolidayPay, data.referralBonus, data.undertimeDeduct]
       .reduce((a, v) => a + (parseFloat(v) || 0), 0);
     const grossDeduction = [data.providentFund, data.labourWelfareFund, data.professionalTax]
       .reduce((a, v) => a + (parseFloat(v) || 0), 0);
-    const net = grossEarnings - grossDeduction;
-    setData(prev => ({ ...prev, amountInWords: numberToWords(net) }));
+    return grossEarnings - grossDeduction;
   }, [data.basicPay, data.hra, data.bonus, data.otherAllowances,
     data.nationalHolidayPay, data.publicHolidayPay, data.referralBonus, data.undertimeDeduct,
     data.providentFund, data.labourWelfareFund, data.professionalTax]);
+
+  const dataWithWords = useMemo(() => ({
+    ...data,
+    amountInWords: numberToWords(netAmount),
+  }), [data, netAmount]);
 
   const handleDownload = useCallback(async () => {
     if (!previewRef.current) return;
