@@ -39,35 +39,46 @@ const PayslipPreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
 
   const netTransfer = grossEarnings - grossDeduction;
 
-  const cellStyle = "border border-black px-2 py-1 text-[11px]";
-  const boldCell = `${cellStyle} font-bold`;
-  const rightCell = `${cellStyle} text-right`;
-  const boldRightCell = `${boldCell} text-right`;
-
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const monthName = months[parseInt(data.month) - 1] || data.month;
 
+  // Base cell styles matching the image exactly
+  const cell = "border border-black px-1 py-[2px] text-[10.5px]";
+  const boldCell = `${cell} font-bold`;
+  const rightCell = `${cell} text-right`;
+  const boldRightCell = `${boldCell} text-right`;
+
   return (
-    <div ref={ref} className="bg-white text-black p-6" style={{ width: "794px", fontFamily: "Arial, sans-serif" }}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-1">
-        <div className="flex-1">
-          <p className="font-bold text-[12px] leading-tight">TaskUS India Private Limited</p>
-          <p className="text-[9px] leading-tight">
-            Reg. Office: 18th & 19th floor, Tower-9, Gigaplex IT Park, MIDC, Plot No 1 I.T.5, Airoli Knowledge Park Road,
+    <div
+      ref={ref}
+      className="bg-white text-black"
+      style={{ width: "794px", fontFamily: "Arial, sans-serif", padding: "18px 20px" }}
+    >
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "4px" }}>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontWeight: "bold", fontSize: "12px", lineHeight: "1.3", margin: 0 }}>
+            TaskUS India Private Limited
+          </p>
+          <p style={{ fontSize: "8.5px", lineHeight: "1.4", margin: "2px 0 0 0" }}>
+            Reg.Office: 18th &amp; 19th floor, Tower-9, Gigaplex IT Park, MIDC, Plot No 1 I.T.5, Airoli Knowledge Park Road,
+          </p>
+          <p style={{ fontSize: "8.5px", lineHeight: "1.4", margin: 0 }}>
             TTC Industrial Area, Airoli, Navi Mumbai, Maharashtra – 400708, India
           </p>
-          <p className="font-bold text-[11px] mt-1">Pay Slip for the Month of {monthName} {data.year}</p>
+          <p style={{ fontWeight: "bold", fontSize: "11px", marginTop: "5px", marginBottom: 0 }}>
+            Pay Slip for the Month of {monthName} {data.year}
+          </p>
         </div>
-        <img src={taskusLogo} alt="TaskUs" className="h-10 ml-4" />
+        <img src={taskusLogo} alt="TaskUs" style={{ height: "38px", marginLeft: "12px", marginTop: "2px" }} />
       </div>
 
-      {/* Employee Details + Hours/Days */}
-      <table className="w-full border-collapse border border-black mt-2">
+      {/* ── Employee Details Table ── */}
+      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", marginTop: "4px" }}>
         <tbody>
           {[
             [["EMPCODE", data.empCode], ["UAN NO", data.uanNo]],
-            [["EMP NAME", data.empName], ["PF NO", data.pfNo]],
+            [["EMPNAME", data.empName], ["PF NO", data.pfNo]],
             [["DESIGNATION", data.designation], ["ESI NO", data.esiNo]],
             [["DOJ", data.doj], ["STD DAYS", data.stdDays]],
             [["PAN", data.pan], ["WRKDAYS", data.wrkDays]],
@@ -85,105 +96,105 @@ const PayslipPreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
           ].map((row, i) => (
             <tr key={i}>
               <td className={boldCell} style={{ width: "25%" }}>{row[0][0]}</td>
-              <td className={cellStyle} style={{ width: "25%" }}>{row[0][1]}</td>
+              <td className={cell} style={{ width: "25%" }}>{row[0][1]}</td>
               <td className={boldCell} style={{ width: "25%" }}>{row[1][0]}</td>
-              <td className={cellStyle} style={{ width: "25%" }}>{row[1][1]}</td>
+              <td className={cell} style={{ width: "25%" }}>{row[1][1]}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Earnings & Deductions */}
-      <table className="w-full border-collapse border border-black mt-0">
+      {/* ── Earnings & Deductions Table ── */}
+      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", marginTop: "-1px" }}>
         <thead>
           <tr>
-            <td className={boldCell} style={{ width: "22%" }}>EARNINGS</td>
-            <td className={boldRightCell} style={{ width: "13%" }}>MASTER AMOUNT</td>
-            <td className={boldRightCell} style={{ width: "13%" }}></td>
-            <td className={boldRightCell} style={{ width: "13%" }}>YTD</td>
-            <td className={boldCell} style={{ width: "18%" }}>DEDUCTIONS</td>
-            <td className={boldRightCell} style={{ width: "11%" }}>AMOUNT</td>
+            <td className={boldCell} style={{ width: "26%" }}>EARNINGS</td>
+            <td className={boldRightCell} style={{ width: "10%" }}>MASTER</td>
+            <td className={boldRightCell} style={{ width: "10%" }}>AMOUNT</td>
             <td className={boldRightCell} style={{ width: "10%" }}>YTD</td>
+            <td className={boldCell} style={{ width: "22%" }}>DEDUCTIONS</td>
+            <td className={boldRightCell} style={{ width: "11%" }}>AMOUNT</td>
+            <td className={boldRightCell} style={{ width: "11%" }}>YTD</td>
           </tr>
         </thead>
         <tbody>
-          {/* Row 1: Basic Pay / PF */}
+          {/* Row 1: Basic Pay / Provident Fund */}
           <tr>
-            <td className={cellStyle}>BASIC PAY</td>
+            <td className={cell}>BASIC PAY</td>
             <td className={rightCell}>{fmt(data.basicPayMaster)}</td>
             <td className={rightCell}>{fmt(data.basicPay)}</td>
             <td className={rightCell}>{fmt(data.basicPayYtd)}</td>
-            <td className={cellStyle}>PROVIDENT FUND</td>
+            <td className={cell}>PROVIDENT FUND</td>
             <td className={rightCell}>{fmt(data.providentFund)}</td>
             <td className={rightCell}>{fmt(data.providentFundYtd)}</td>
           </tr>
-          {/* Row 2: HRA / LWF */}
+          {/* Row 2: HRA / Labour Welfare Fund */}
           <tr>
-            <td className={cellStyle}>HOUSE RENT ALLOWANCE</td>
+            <td className={cell}>HOUSE RENT ALLOWANCE</td>
             <td className={rightCell}>{fmt(data.hraMaster)}</td>
             <td className={rightCell}>{fmt(data.hra)}</td>
             <td className={rightCell}>{fmt(data.hraYtd)}</td>
-            <td className={cellStyle}>LABOUR WELFARE FUND</td>
+            <td className={cell}>LABOUR WELFARE FUND</td>
             <td className={rightCell}>{fmt(data.labourWelfareFund)}</td>
             <td className={rightCell}>{fmt(data.labourWelfareFundYtd)}</td>
           </tr>
-          {/* Row 3: Bonus / PT */}
+          {/* Row 3: Bonus / Professional Tax */}
           <tr>
-            <td className={cellStyle}>BONUS</td>
+            <td className={cell}>BONUS</td>
             <td className={rightCell}>{fmt(data.bonusMaster)}</td>
             <td className={rightCell}>{fmt(data.bonus)}</td>
             <td className={rightCell}>{fmt(data.bonusYtd)}</td>
-            <td className={cellStyle}>PROFESSIONAL TAX</td>
+            <td className={cell}>PROFESSIONAL TAX</td>
             <td className={rightCell}>{fmt(data.professionalTax)}</td>
             <td className={rightCell}>{fmt(data.professionalTaxYtd)}</td>
           </tr>
           {/* Row 4: Other Allowances */}
           <tr>
-            <td className={cellStyle}>OTHER ALLOWANCES</td>
+            <td className={cell}>OTHER ALLOWANCES</td>
             <td className={rightCell}>{fmt(data.otherAllowancesMaster)}</td>
             <td className={rightCell}>{fmt(data.otherAllowances)}</td>
             <td className={rightCell}>{fmt(data.otherAllowancesYtd)}</td>
-            <td className={cellStyle}></td>
+            <td className={cell}></td>
             <td className={rightCell}></td>
             <td className={rightCell}></td>
           </tr>
           {/* Row 5: National Holiday Pay */}
           <tr>
-            <td className={cellStyle}>NATIONAL HOLIDAY PAY</td>
+            <td className={cell}>NATIONAL HOLIDAY PAY</td>
             <td className={rightCell}></td>
             <td className={rightCell}>{fmt(data.nationalHolidayPay)}</td>
             <td className={rightCell}>{fmt(data.nationalHolidayPayYtd)}</td>
-            <td className={cellStyle}></td>
+            <td className={cell}></td>
             <td className={rightCell}></td>
             <td className={rightCell}></td>
           </tr>
           {/* Row 6: Public Holiday Pay */}
           <tr>
-            <td className={cellStyle}>PUBLIC HOLIDAY PAY</td>
+            <td className={cell}>PUBLIC HOLIDAY PAY</td>
             <td className={rightCell}></td>
             <td className={rightCell}>{fmt(data.publicHolidayPay)}</td>
             <td className={rightCell}>{fmt(data.publicHolidayPayYtd)}</td>
-            <td className={cellStyle}></td>
+            <td className={cell}></td>
             <td className={rightCell}></td>
             <td className={rightCell}></td>
           </tr>
           {/* Row 7: Referral Bonus */}
           <tr>
-            <td className={cellStyle}>REFERRAL BONUS</td>
+            <td className={cell}>REFERRAL BONUS</td>
             <td className={rightCell}></td>
             <td className={rightCell}>{fmt(data.referralBonus)}</td>
             <td className={rightCell}>{fmt(data.referralBonusYtd)}</td>
-            <td className={cellStyle}></td>
+            <td className={cell}></td>
             <td className={rightCell}></td>
             <td className={rightCell}></td>
           </tr>
-          {/* Row 8: Undertime Deduct */}
+          {/* Row 8: Undertime and Tardiness Deduct */}
           <tr>
-            <td className={cellStyle}>UNDERTIME AND TARDINESS DEDUCT</td>
+            <td className={cell}>UNDERTIME AND TARDINESS DEDUCT</td>
             <td className={rightCell}></td>
             <td className={rightCell}>{fmt(data.undertimeDeduct)}</td>
             <td className={rightCell}>{fmt(data.undertimeDeductYtd)}</td>
-            <td className={cellStyle}></td>
+            <td className={cell}></td>
             <td className={rightCell}></td>
             <td className={rightCell}></td>
           </tr>
@@ -200,23 +211,25 @@ const PayslipPreview = forwardRef<HTMLDivElement, Props>(({ data }, ref) => {
         </tbody>
       </table>
 
-      {/* Net Transfer */}
-      <table className="w-full border-collapse border border-black mt-0">
+      {/* ── Net Transfer Table ── */}
+      <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", marginTop: "-1px" }}>
         <tbody>
           <tr>
-            <td className={`${boldCell}`} colSpan={7}>
-              NET TRANSFER: {fmt(String(netTransfer))}
+            <td className={boldCell} colSpan={7} style={{ paddingTop: "3px", paddingBottom: "3px" }}>
+              <span style={{ fontWeight: "bold" }}>NET TRANSFER</span>
+              <span style={{ fontWeight: "normal" }}>&nbsp;&nbsp;: {fmt(String(netTransfer))}</span>
             </td>
           </tr>
           <tr>
-            <td className={`${boldCell}`} colSpan={7}>
-              IN WORDS: {data.amountInWords}
+            <td className={cell} colSpan={7} style={{ paddingTop: "3px", paddingBottom: "3px" }}>
+              <span style={{ fontWeight: "bold" }}>IN WORDS</span>
+              <span style={{ fontWeight: "normal" }}>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {data.amountInWords}</span>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <p className="text-[9px] mt-3 italic text-center">
+      <p style={{ fontSize: "8.5px", marginTop: "10px", fontStyle: "italic", textAlign: "center" }}>
         This is a computer generated document, hence no signature is required.
       </p>
     </div>
